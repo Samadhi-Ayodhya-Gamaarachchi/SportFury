@@ -11,21 +11,37 @@ import { fetchMatches, fetchTeams } from '../../store/slices/sportsSlice';
 export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
-  const { teams, matches, isLoading, selectedLeague } = useSelector((state: RootState) => state.sports);
+  const { teams, matches, isLoading, selectedLeague, error } = useSelector((state: RootState) => state.sports);
   const { user } = useSelector((state: RootState) => state.auth);
   const favorites = useSelector((state: RootState) => state.favorites.items);
   const { theme, isDarkMode } = useTheme();
 
   useEffect(() => {
+    console.log('HomeScreen mounted, loading data...');
     loadData();
+  }, []);
+
+  useEffect(() => {
+    if (selectedLeague) {
+      console.log('League changed to:', selectedLeague);
+      loadData();
+    }
   }, [selectedLeague]);
 
   const loadData = async () => {
     try {
-      await Promise.all([
-        dispatch(fetchTeams(selectedLeague)),
-        dispatch(fetchMatches(selectedLeague))
-      ]);
+      console.log('=== LOADING DATA ===');
+      console.log('Current league:', selectedLeague);
+      console.log('Current teams count:', teams.length);
+      console.log('Current matches count:', matches.length);
+      
+      const teamResult = await dispatch(fetchTeams(selectedLeague || 'English Premier League'));
+      console.log('Team result:', teamResult);
+      
+      const matchResult = await dispatch(fetchMatches(selectedLeague || 'English Premier League'));
+      console.log('Match result:', matchResult);
+      
+      console.log('=== DATA LOADED ===');
     } catch (error) {
       console.error('Failed to load data:', error);
     }
@@ -53,10 +69,47 @@ export default function HomeScreen() {
     return favorites.some(fav => fav.id === id);
   };
 
-  // Use real data or fallback to placeholder data
-  const featuredTeams = teams.slice(0, 2);
-  const recentMatches = matches.slice(0, 3);
-  const topTeams = teams.slice(0, 4);
+  // Fallback data for when API is loading or fails
+  const fallbackTeams = [
+    {
+      idTeam: 'fallback1',
+      strTeam: 'Manchester United',
+      strTeamBadge: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=100&h=100&fit=crop',
+      strLeague: 'Premier League',
+      strStadium: 'Old Trafford'
+    },
+    {
+      idTeam: 'fallback2', 
+      strTeam: 'Liverpool FC',
+      strTeamBadge: 'https://images.unsplash.com/photo-1556056504-5c7696c4c28d?w=100&h=100&fit=crop',
+      strLeague: 'Premier League',
+      strStadium: 'Anfield'
+    }
+  ];
+
+  const fallbackMatches = [
+    {
+      idEvent: 'match1',
+      strEvent: 'Manchester United vs Liverpool',
+      strStatus: 'Finished',
+      intHomeScore: '2',
+      intAwayScore: '1',
+      dateEvent: '2024-03-15'
+    }
+  ];
+
+  // Use real data or fallback to placeholder data - always show something
+  const featuredTeams = teams.length > 0 ? teams.slice(0, 2) : fallbackTeams;
+  const recentMatches = matches.length > 0 ? matches.slice(0, 3) : fallbackMatches;
+  const topTeams = teams.length > 0 ? teams.slice(0, 4) : fallbackTeams.slice(0, 4);
+  
+  console.log('Rendering with:', {
+    teamsCount: teams.length,
+    matchesCount: matches.length,
+    isLoading,
+    error,
+    featuredTeamsCount: featuredTeams.length
+  });
 
   return (
     <ScrollView 
@@ -86,21 +139,32 @@ export default function HomeScreen() {
           <TouchableOpacity style={[styles.categoryButton, { backgroundColor: theme.primary }]}>
             <Text style={[styles.categoryButtonText, { color: '#fff' }]}>Public All</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.categoryButtonInactive, { backgroundColor: theme.background, borderColor: theme.border }]}>
-            <Text style={[styles.categoryButtonTextInactive, { color: theme.textSecondary }]}>sports_soccer Football</Text>
-          </TouchableOpacity>
+         
         </View>
       </View>
 
       {/* Featured Teams */}
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: theme.text }]}>Featured Teams</Text>
-        {isLoading ? (
+        {error && (
+          <View style={styles.errorContainer}>
+            <Text style={[styles.errorText, { color: theme.primary }]}>Error: {error}</Text>
+            <TouchableOpacity onPress={loadData} style={[styles.retryButton, { backgroundColor: theme.primary }]}>
+              <Text style={styles.retryButtonText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        <Text style={[styles.debugText, { color: theme.textSecondary }]}>
+          Teams: {teams.length}, Matches: {matches.length}, Loading: {isLoading ? 'Yes' : 'No'}
+        </Text>
+        {isLoading && teams.length === 0 && (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={theme.primary} />
+            <Text style={[styles.loadingText, { color: theme.textSecondary }]}>Loading sports data...</Text>
           </View>
-        ) : (
-          featuredTeams.map((team) => (
+        )}
+        {/* Always show content - either real data or fallback */}
+        {featuredTeams.map((team) => (
             <TouchableOpacity 
               key={team.idTeam} 
               style={[styles.featuredCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
@@ -108,10 +172,16 @@ export default function HomeScreen() {
             >
               <ImageBackground
                 source={{ 
-                  uri: team.strTeamBadge || 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=400&h=200&fit=crop'
+                  uri: team.strTeamBadge || 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=400&h=200&fit=crop&crop=center'
                 }}
                 style={styles.featuredImage}
                 imageStyle={styles.featuredImageStyle}
+                defaultSource={{
+                  uri: 'https://via.placeholder.com/400x200/E53E3E/ffffff?text=' + encodeURIComponent(team.strTeam || 'Team')
+                }}
+                onError={() => {
+                  console.log('Image failed to load for team:', team.strTeam);
+                }}
               >
                 <View style={styles.featuredOverlay}>
                   <View style={styles.featuredContent}>
@@ -134,8 +204,7 @@ export default function HomeScreen() {
                 </View>
               </ImageBackground>
             </TouchableOpacity>
-          ))
-        )}
+          ))}
       </View>
 
       {/* Recent Matches Section */}
@@ -399,6 +468,36 @@ const styles = StyleSheet.create({
   loadingContainer: {
     padding: 40,
     alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 14,
+    marginTop: 10,
+    textAlign: 'center',
+  },
+  errorContainer: {
+    padding: 20,
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  errorText: {
+    fontSize: 14,
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  retryButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  debugText: {
+    fontSize: 12,
+    padding: 10,
+    textAlign: 'center',
   },
   featuredContent: {
     flex: 1,

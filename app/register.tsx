@@ -1,18 +1,41 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
-import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import { useTheme } from '../hooks/useTheme';
+import { AppDispatch, RootState } from '../store';
+import { clearError, registerUser } from '../store/slices/authSlice';
 
 export default function RegisterScreen() {
-  const [fullName, setFullName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
+  const dispatch = useDispatch<AppDispatch>();
+  const { theme, isDarkMode } = useTheme();
+  const { isLoading, error, isAuthenticated } = useSelector((state: RootState) => state.auth);
 
-  const handleRegister = () => {
-    if (!fullName || !email || !password || !confirmPassword) {
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace('/(tabs)');
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (error) {
+      Alert.alert('Registration Failed', error);
+      dispatch(clearError());
+    }
+  }, [error, dispatch]);
+
+  const handleRegister = async () => {
+    if (!firstName || !lastName || !username || !email || !password || !confirmPassword) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
@@ -20,8 +43,26 @@ export default function RegisterScreen() {
       Alert.alert('Error', 'Passwords do not match');
       return;
     }
-    // Here you would normally handle user registration
-    router.push('/(tabs)');
+    if (password.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters long');
+      return;
+    }
+    
+    try {
+      console.log('Submitting registration form');
+      await dispatch(registerUser({
+        firstName,
+        lastName,
+        username,
+        email,
+        password
+      })).unwrap();
+      
+      console.log('Registration successful, redirecting...');
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      Alert.alert('Registration Error', error.message || 'Failed to register. Please try again.');
+    }
   };
 
   const handleSocialSignup = (provider: string) => {
@@ -32,7 +73,7 @@ export default function RegisterScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.logo}>
-          <Ionicons name="basketball" size={32} color="#fff" />
+          <Feather name="activity" size={32} color="#fff" />
         </View>
         <Text style={styles.brandName}>SPORTIFY</Text>
         <Text style={styles.title}>Join the Action</Text>
@@ -41,15 +82,44 @@ export default function RegisterScreen() {
 
       <View style={styles.formContainer}>
         <View style={styles.inputContainer}>
-          <Text style={styles.label}>Full Name</Text>
+          <Text style={styles.label}>First Name</Text>
           <View style={styles.inputWrapper}>
-            <Ionicons name="person-outline" size={20} color="#666" style={styles.inputIcon} />
+            <Feather name="user" size={20} color="#666" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
-              placeholder="Enter your full name"
+              placeholder="Enter your first name"
               placeholderTextColor="#666"
-              value={fullName}
-              onChangeText={setFullName}
+              value={firstName}
+              onChangeText={setFirstName}
+            />
+          </View>
+        </View>
+
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Last Name</Text>
+          <View style={styles.inputWrapper}>
+            <Feather name="user" size={20} color="#666" style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your last name"
+              placeholderTextColor="#666"
+              value={lastName}
+              onChangeText={setLastName}
+            />
+          </View>
+        </View>
+
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Username</Text>
+          <View style={styles.inputWrapper}>
+            <Feather name="at-sign" size={20} color="#666" style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              placeholder="Choose a username"
+              placeholderTextColor="#666"
+              value={username}
+              onChangeText={setUsername}
+              autoCapitalize="none"
             />
           </View>
         </View>
@@ -57,7 +127,7 @@ export default function RegisterScreen() {
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Email</Text>
           <View style={styles.inputWrapper}>
-            <Ionicons name="mail-outline" size={20} color="#666" style={styles.inputIcon} />
+            <Feather name="mail" size={20} color="#666" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
               placeholder="alex.smith@email.com"
@@ -73,7 +143,7 @@ export default function RegisterScreen() {
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Password</Text>
           <View style={styles.inputWrapper}>
-            <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
+            <Feather name="lock" size={20} color="#666" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
               placeholder="Enter your password"
@@ -86,8 +156,8 @@ export default function RegisterScreen() {
               onPress={() => setShowPassword(!showPassword)}
               style={styles.eyeIcon}
             >
-              <Ionicons 
-                name={showPassword ? "eye-outline" : "eye-off-outline"} 
+              <Feather 
+                name={showPassword ? "eye" : "eye-off"} 
                 size={20} 
                 color="#666" 
               />
@@ -98,7 +168,7 @@ export default function RegisterScreen() {
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Confirm Password</Text>
           <View style={styles.inputWrapper}>
-            <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
+            <Feather name="lock" size={20} color="#666" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
               placeholder="Re-enter your password"
@@ -111,8 +181,8 @@ export default function RegisterScreen() {
               onPress={() => setShowConfirmPassword(!showConfirmPassword)}
               style={styles.eyeIcon}
             >
-              <Ionicons 
-                name={showConfirmPassword ? "eye-outline" : "eye-off-outline"} 
+              <Feather 
+                name={showConfirmPassword ? "eye" : "eye-off"} 
                 size={20} 
                 color="#666" 
               />
@@ -120,8 +190,16 @@ export default function RegisterScreen() {
           </View>
         </View>
 
-        <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
-          <Text style={styles.registerButtonText}>Create Account</Text>
+        <TouchableOpacity 
+          style={[styles.registerButton, isLoading && styles.disabledButton]} 
+          onPress={handleRegister}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Text style={styles.registerButtonText}>Create Account</Text>
+          )}
         </TouchableOpacity>
 
         <View style={styles.loginContainer}>
@@ -138,19 +216,19 @@ export default function RegisterScreen() {
             style={styles.socialButton}
             onPress={() => handleSocialSignup('Google')}
           >
-            <Ionicons name="logo-google" size={24} color="#fff" />
+            <Feather name="globe" size={24} color="#fff" />
           </TouchableOpacity>
           <TouchableOpacity 
             style={styles.socialButton}
             onPress={() => handleSocialSignup('Apple')}
           >
-            <Ionicons name="logo-apple" size={24} color="#fff" />
+            <Feather name="smartphone" size={24} color="#fff" />
           </TouchableOpacity>
           <TouchableOpacity 
             style={styles.socialButton}
             onPress={() => handleSocialSignup('Facebook')}
           >
-            <Ionicons name="logo-facebook" size={24} color="#fff" />
+            <Feather name="users" size={24} color="#fff" />
           </TouchableOpacity>
         </View>
       </View>
@@ -239,6 +317,10 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  disabledButton: {
+    backgroundColor: '#666',
+    opacity: 0.7,
   },
   loginContainer: {
     flexDirection: 'row',

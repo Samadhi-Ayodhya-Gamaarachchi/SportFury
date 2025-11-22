@@ -1,142 +1,278 @@
-import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import React from 'react';
-import { ImageBackground, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { router, useLocalSearchParams } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { ImageBackground, ScrollView, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator, Alert } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import { useTheme } from '../hooks/useTheme';
+import { AppDispatch, RootState } from '../store';
+import { addToFavorites, removeFromFavorites } from '../store/slices/favoritesSlice';
+
+interface DetailItem {
+  id: string;
+  name: string;
+  subtitle: string;
+  description: string;
+  image: string;
+  type: 'team' | 'match';
+  additionalInfo: any;
+}
 
 export default function DetailsScreen() {
-  const playerData = {
-    name: 'Alexander Rossi',
-    position: 'INDYCAR | ROKIT BMW M',
-    category: 'Motorsport',
-    image: 'https://images.unsplash.com/photo-1566577739112-5180d4bf9390?w=400&h=600&fit=crop&crop=center',
-    stats: {
-      height: "6'5\"",
-      weight: '210 lbs',
-      points: '25.3',
-      assists: '7.1',
-    },
-    isFavorite: false,
-    upcomingMatches: [
-      {
-        id: 1,
-        homeTeam: 'Team A',
-        awayTeam: 'Team B',
-        date: 'Oct 29',
-        time: '7:00 PM',
-        homeIcon: 'https://via.placeholder.com/40x40/E53E3E/ffffff?text=A',
-        awayIcon: 'https://via.placeholder.com/40x40/4A90E2/ffffff?text=B',
+  const { id, type } = useLocalSearchParams<{ id: string; type: 'team' | 'match' }>();
+  const [item, setItem] = useState<DetailItem | null>(null);
+  const [loading, setLoading] = useState(true);
+  
+  const dispatch = useDispatch<AppDispatch>();
+  const { theme } = useTheme();
+  const { items: favoriteItems } = useSelector((state: RootState) => state.favorites);
+  const { teams, matches } = useSelector((state: RootState) => state.sports);
+
+  const isFavorite = favoriteItems.some(fav => fav.id === id);
+
+  useEffect(() => {
+    loadItemDetails();
+  }, [id, type]);
+
+  const loadItemDetails = () => {
+    setLoading(true);
+    
+    if (type === 'team') {
+      const team = teams.find(t => t.idTeam === id);
+      if (team) {
+        setItem({
+          id: team.idTeam,
+          name: team.strTeam,
+          subtitle: team.strLeague || 'Football Team',
+          description: team.strStadium ? `Home Stadium: ${team.strStadium}` : 'Professional Football Team',
+          image: team.strTeamBadge || 'https://via.placeholder.com/400x300/E53E3E/ffffff?text=' + encodeURIComponent(team.strTeam),
+          type: 'team',
+          additionalInfo: {
+            stadium: team.strStadium,
+            league: team.strLeague,
+            description: team.strDescription || 'A professional football team competing at the highest level.',
+          }
+        });
       }
-    ]
+    } else if (type === 'match') {
+      const match = matches.find(m => m.idEvent === id);
+      if (match) {
+        setItem({
+          id: match.idEvent,
+          name: match.strEvent,
+          subtitle: match.strStatus || 'Football Match',
+          description: `${match.strHomeTeam} vs ${match.strAwayTeam}`,
+          image: 'https://images.unsplash.com/photo-1459865264687-595d652de67e?w=400&h=300&fit=crop&crop=center',
+          type: 'match',
+          additionalInfo: {
+            homeTeam: match.strHomeTeam,
+            awayTeam: match.strAwayTeam,
+            homeScore: match.intHomeScore,
+            awayScore: match.intAwayScore,
+            date: match.dateEvent,
+            status: match.strStatus
+          }
+        });
+      }
+    }
+    
+    setLoading(false);
   };
 
   const handleFavoriteToggle = () => {
-    // Handle favorite toggle logic
+    if (!item) return;
+    
+    const favoriteItem = {
+      id: item.id,
+      name: item.name,
+      image: item.image,
+      type: item.type
+    };
+
+    if (isFavorite) {
+      dispatch(removeFromFavorites(item.id));
+    } else {
+      dispatch(addToFavorites(favoriteItem));
+    }
   };
 
   const handleShare = () => {
-    // Handle share logic
+    Alert.alert('Share', `Share ${item?.name || 'this item'} with friends!`);
   };
 
+  if (loading) {
+    return (
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.primary} />
+          <Text style={[styles.loadingText, { color: theme.text }]}>Loading details...</Text>
+        </View>
+      </View>
+    );
+  }
+
+  if (!item) {
+    return (
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Feather name="arrow-left" size={24} color={theme.text} />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>Details</Text>
+        </View>
+        <View style={styles.errorContainer}>
+          <Text style={[styles.errorText, { color: theme.text }]}>Item not found</Text>
+          <TouchableOpacity 
+            style={[styles.primaryButton, { backgroundColor: theme.primary }]}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.primaryButtonText}>Go Back</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
+          <Feather name="arrow-left" size={24} color={theme.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Details</Text>
+        <Text style={[styles.headerTitle, { color: theme.text }]}>
+          {item.type === 'team' ? 'Team Details' : 'Match Details'}
+        </Text>
         <TouchableOpacity onPress={handleShare} style={styles.shareButton}>
-          <Ionicons name="share-outline" size={24} color="#fff" />
+          <Feather name="share" size={24} color={theme.text} />
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Player Image */}
+        {/* Item Image */}
         <View style={styles.imageContainer}>
           <ImageBackground
-            source={{ uri: playerData.image }}
+            source={{ uri: item.image }}
             style={styles.playerImage}
             imageStyle={styles.playerImageStyle}
+            defaultSource={{
+              uri: 'https://via.placeholder.com/400x300/E53E3E/ffffff?text=' + encodeURIComponent(item.name)
+            }}
           >
             <View style={styles.imageOverlay}>
               <TouchableOpacity 
-                style={styles.favoriteButton}
+                style={[styles.favoriteButton, { backgroundColor: 'rgba(0,0,0,0.6)' }]}
                 onPress={handleFavoriteToggle}
               >
-                <Ionicons 
-                  name={playerData.isFavorite ? "heart" : "heart-outline"} 
+                <Feather 
+                  name="heart" 
                   size={24} 
-                  color={playerData.isFavorite ? "#E53E3E" : "#fff"} 
+                  color={isFavorite ? theme.primary : "#fff"} 
                 />
               </TouchableOpacity>
             </View>
           </ImageBackground>
         </View>
 
-        {/* Player Info */}
+        {/* Item Info */}
         <View style={styles.playerInfo}>
-          <Text style={styles.playerName}>{playerData.name}</Text>
-          <Text style={styles.playerPosition}>{playerData.position}</Text>
-          <Text style={styles.playerCategory}>{playerData.category}</Text>
+          <Text style={[styles.playerName, { color: theme.text }]}>{item.name}</Text>
+          <Text style={[styles.playerPosition, { color: theme.primary }]}>{item.subtitle}</Text>
+          <Text style={[styles.playerCategory, { color: theme.textSecondary }]}>{item.description}</Text>
         </View>
 
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.primaryButton}>
-            <Text style={styles.primaryButtonText}>Stats</Text>
+          <TouchableOpacity style={[styles.primaryButton, { backgroundColor: theme.primary }]}>
+            <Text style={styles.primaryButtonText}>
+              {item.type === 'team' ? 'Team Info' : 'Match Info'}
+            </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.secondaryButton}>
-            <Text style={styles.secondaryButtonText}>Bio</Text>
+          <TouchableOpacity style={[styles.secondaryButton, { backgroundColor: theme.surface }]}>
+            <Text style={[styles.secondaryButtonText, { color: theme.textSecondary }]}>
+              {item.type === 'team' ? 'Players' : 'Statistics'}
+            </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.secondaryButton}>
-            <Text style={styles.secondaryButtonText}>News</Text>
+          <TouchableOpacity style={[styles.secondaryButton, { backgroundColor: theme.surface }]}>
+            <Text style={[styles.secondaryButtonText, { color: theme.textSecondary }]}>News</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Stats Section */}
+        {/* Dynamic Content Section */}
         <View style={styles.statsSection}>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>
+            {item.type === 'team' ? 'Team Details' : 'Match Details'}
+          </Text>
           <View style={styles.statsGrid}>
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>Height</Text>
-              <Text style={styles.statValue}>{playerData.stats.height}</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>Weight</Text>
-              <Text style={styles.statValue}>{playerData.stats.weight}</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>Points</Text>
-              <Text style={styles.statValue}>{playerData.stats.points}</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>Assists</Text>
-              <Text style={styles.statValue}>{playerData.stats.assists}</Text>
-            </View>
+            {item.type === 'team' ? (
+              <>
+                <View style={[styles.statItem, { backgroundColor: theme.surface }]}>
+                  <Text style={[styles.statLabel, { color: theme.textSecondary }]}>League</Text>
+                  <Text style={[styles.statValue, { color: theme.text }]}>
+                    {item.additionalInfo.league || 'N/A'}
+                  </Text>
+                </View>
+                <View style={[styles.statItem, { backgroundColor: theme.surface }]}>
+                  <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Stadium</Text>
+                  <Text style={[styles.statValue, { color: theme.text }]}>
+                    {item.additionalInfo.stadium || 'N/A'}
+                  </Text>
+                </View>
+                <View style={[styles.statItem, { backgroundColor: theme.surface }]}>
+                  <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Type</Text>
+                  <Text style={[styles.statValue, { color: theme.text }]}>Football Club</Text>
+                </View>
+                <View style={[styles.statItem, { backgroundColor: theme.surface }]}>
+                  <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Status</Text>
+                  <Text style={[styles.statValue, { color: theme.text }]}>Active</Text>
+                </View>
+              </>
+            ) : (
+              <>
+                <View style={[styles.statItem, { backgroundColor: theme.surface }]}>
+                  <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Home Team</Text>
+                  <Text style={[styles.statValue, { color: theme.text }]}>
+                    {item.additionalInfo.homeTeam || 'N/A'}
+                  </Text>
+                </View>
+                <View style={[styles.statItem, { backgroundColor: theme.surface }]}>
+                  <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Away Team</Text>
+                  <Text style={[styles.statValue, { color: theme.text }]}>
+                    {item.additionalInfo.awayTeam || 'N/A'}
+                  </Text>
+                </View>
+                <View style={[styles.statItem, { backgroundColor: theme.surface }]}>
+                  <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Score</Text>
+                  <Text style={[styles.statValue, { color: theme.text }]}>
+                    {item.additionalInfo.homeScore && item.additionalInfo.awayScore 
+                      ? `${item.additionalInfo.homeScore} - ${item.additionalInfo.awayScore}`
+                      : 'TBD'
+                    }
+                  </Text>
+                </View>
+                <View style={[styles.statItem, { backgroundColor: theme.surface }]}>
+                  <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Date</Text>
+                  <Text style={[styles.statValue, { color: theme.text }]}>
+                    {item.additionalInfo.date || 'N/A'}
+                  </Text>
+                </View>
+              </>
+            )}
           </View>
         </View>
 
-        {/* Upcoming Matches */}
+        {/* Description Section */}
         <View style={styles.upcomingSection}>
-          <Text style={styles.sectionTitle}>Upcoming Matches</Text>
-          {playerData.upcomingMatches.map((match) => (
-            <TouchableOpacity key={match.id} style={styles.matchCard}>
-              <View style={styles.matchTeams}>
-                <View style={styles.teamContainer}>
-                  <View style={styles.teamIcon}>
-                    <Text style={styles.teamIconText}>A</Text>
-                  </View>
-                  <Text style={styles.teamName}>vs</Text>
-                  <View style={styles.teamIcon}>
-                    <Text style={styles.teamIconText}>B</Text>
-                  </View>
-                </View>
-              </View>
-              <View style={styles.matchInfo}>
-                <Text style={styles.matchDate}>{match.date}</Text>
-                <Text style={styles.matchTime}>{match.time}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>
+            {item.type === 'team' ? 'About Team' : 'Match Details'}
+          </Text>
+          <View style={[styles.matchCard, { backgroundColor: theme.surface }]}>
+            <Text style={[styles.descriptionText, { color: theme.text }]}>
+              {item.type === 'team' 
+                ? item.additionalInfo.description || `${item.name} is a professional football team competing in ${item.additionalInfo.league || 'top-level'} football.`
+                : `This match between ${item.additionalInfo.homeTeam} and ${item.additionalInfo.awayTeam} ${item.additionalInfo.status ? `is ${item.additionalInfo.status.toLowerCase()}` : 'was scheduled'} on ${item.additionalInfo.date || 'the specified date'}.`
+              }
+            </Text>
+          </View>
         </View>
       </ScrollView>
     </View>
@@ -146,7 +282,26 @@ export default function DetailsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a1a',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  errorText: {
+    fontSize: 18,
+    marginBottom: 20,
+    textAlign: 'center',
   },
   header: {
     flexDirection: 'row',
@@ -203,17 +358,14 @@ const styles = StyleSheet.create({
   playerName: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#fff',
     marginBottom: 8,
   },
   playerPosition: {
     fontSize: 16,
-    color: '#E53E3E',
     marginBottom: 4,
   },
   playerCategory: {
     fontSize: 14,
-    color: '#666',
   },
   actionButtons: {
     flexDirection: 'row',
@@ -233,13 +385,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   secondaryButton: {
-    backgroundColor: '#333',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 20,
   },
   secondaryButtonText: {
-    color: '#666',
     fontSize: 14,
     fontWeight: '600',
   },
@@ -254,7 +404,6 @@ const styles = StyleSheet.create({
   },
   statItem: {
     width: '48%',
-    backgroundColor: '#333',
     padding: 15,
     borderRadius: 10,
     marginBottom: 10,
@@ -262,13 +411,11 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 12,
-    color: '#666',
     marginBottom: 5,
   },
   statValue: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#fff',
   },
   upcomingSection: {
     paddingHorizontal: 20,
@@ -277,16 +424,15 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#fff',
     marginBottom: 15,
   },
   matchCard: {
-    backgroundColor: '#333',
     borderRadius: 15,
     padding: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  },
+  descriptionText: {
+    fontSize: 16,
+    lineHeight: 24,
   },
   matchTeams: {
     flex: 1,

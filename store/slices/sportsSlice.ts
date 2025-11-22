@@ -50,7 +50,7 @@ const initialState: SportsState = {
   leagues: [],
   isLoading: false,
   error: null,
-  selectedLeague: 'English Premier League',
+  selectedLeague: 'Premier League',
 };
 
 // Async thunks

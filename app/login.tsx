@@ -8,7 +8,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useTheme } from '../hooks/useTheme';
 import { loginSchema } from '../services/validation';
 import { AppDispatch, RootState } from '../store';
-import { clearError } from '../store/slices/authSlice';
+import { clearError, loginUser } from '../store/slices/authSlice';
 
 interface LoginFormData {
   username: string;
@@ -48,28 +48,25 @@ export default function LoginScreen() {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      // For demo purposes, allow any username/password combination
-      if (data.username.length > 0 && data.password.length > 0) {
-        // Simulate successful login with demo user
-        const demoUser = {
-          id: 1,
-          username: data.username,
-          email: data.username.includes('@') ? data.username : `${data.username}@demo.com`,
-          firstName: data.username.charAt(0).toUpperCase() + data.username.slice(1),
-          lastName: 'User',
-          image: 'https://robohash.org/' + data.username + '?set=set2&size=150x150',
-          token: 'demo-token-' + Date.now(),
-        };
-        
-        // Simulate API call delay
-        setTimeout(() => {
-          router.replace('/(tabs)');
-        }, 500);
+      console.log('Submitting login form:', data);
+      
+      // Use actual DummyJSON API for authentication
+      const result = await dispatch(loginUser(data)).unwrap();
+      
+      console.log('Login successful, redirecting...');
+      // Navigation will be handled by the useEffect when isAuthenticated becomes true
+    } catch (error: any) {
+      console.error('Login error:', error);
+      
+      // Provide helpful error message for demo users
+      if (error.message?.includes('400')) {
+        Alert.alert(
+          'Login Failed', 
+          'Try these demo credentials:\n\nUsername: emilys\nPassword: emilyspass\n\nOr:\nUsername: michaelw\nPassword: michaelwpass'
+        );
       } else {
-        Alert.alert('Error', 'Please enter username and password');
+        Alert.alert('Login Error', error.message || 'Failed to login. Please try again.');
       }
-    } catch (error) {
-      Alert.alert('Login Error', 'Failed to login. Please try again.');
     }
   };
 

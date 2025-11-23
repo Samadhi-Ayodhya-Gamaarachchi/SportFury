@@ -7,11 +7,12 @@ import { ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react
 export default function WelcomeScreen() {
   return (
     <ImageBackground 
-      source={{ uri: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=500&h=800&fit=crop&crop=center' }}
+      source={require('../assets/images/welcomeImage.jpeg')}
       style={styles.container}
+      resizeMode="cover"
     >
       <LinearGradient
-        colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.8)']}
+        colors={['rgba(0,0,0,0.6)', 'rgba(0,0,0,0.9)']}
         style={styles.gradient}
       >
         <View style={styles.content}>
@@ -31,31 +32,25 @@ export default function WelcomeScreen() {
             <View style={styles.featureItem}>
               <Ionicons name="pulse" size={24} color="#fff" />
               <View style={styles.featureText}>
-                <Text style={styles.featureTitle}>Live Scores &</Text>
-                <Text style={styles.featureTitle}>Updates</Text>
-                <Text style={styles.featureDescription}>Real-time updates</Text>
-                <Text style={styles.featureDescription}>as they happen.</Text>
+                <Text style={styles.featureTitle}>Live Scores & Updates</Text>
+                <Text style={styles.featureDescription}>Real-time updates as they happen.</Text>
+        
               </View>
             </View>
             
             <View style={styles.featureItem}>
               <Ionicons name="people" size={24} color="#fff" />
               <View style={styles.featureText}>
-                <Text style={styles.featureTitle}>Follow Your</Text>
-                <Text style={styles.featureTitle}>Favorite Teams</Text>
-                <Text style={styles.featureDescription}>Never miss a</Text>
-                <Text style={styles.featureDescription}>moment from the</Text>
-                <Text style={styles.featureDescription}>teams you love.</Text>
+                <Text style={styles.featureTitle}>Follow Your Favorite Teams</Text>
+                <Text style={styles.featureDescription}>Never miss a moment from the teams you love.</Text>
               </View>
             </View>
             
             <View style={styles.featureItem}>
               <Ionicons name="analytics" size={24} color="#fff" />
               <View style={styles.featureText}>
-                <Text style={styles.featureTitle}>In-Depth Match</Text>
-                <Text style={styles.featureTitle}>Analysis</Text>
-                <Text style={styles.featureDescription}>Deep dive into stats</Text>
-                <Text style={styles.featureDescription}>and performance.</Text>
+                <Text style={styles.featureTitle}>In-Depth Match Analysis</Text>
+                <Text style={styles.featureDescription}>Deep dive into stats and performance.</Text>
               </View>
             </View>
           </View>
@@ -112,16 +107,20 @@ const styles = StyleSheet.create({
     color: '#fff',
     textAlign: 'center',
     lineHeight: 40,
+    textShadowColor: 'rgba(0, 0, 0, 0.8)',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 4,
   },
   featuresContainer: {
     flex: 1,
     justifyContent: 'center',
-    gap: 30,
+    gap: 50,
+    width: '100%',
   },
   featureItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 15,
+    gap: 20,
   },
   featureText: {
     flex: 1,
@@ -131,15 +130,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#fff',
     lineHeight: 20,
+    textShadowColor: 'rgba(0, 0, 0, 0.7)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
   },
   featureDescription: {
     fontSize: 14,
-    color: '#rgba(255,255,255,0.8)',
+    color: 'rgba(255,255,255,0.9)',
     lineHeight: 18,
     marginTop: 4,
+    textShadowColor: 'rgba(0, 0, 0, 0.7)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   buttonContainer: {
-    gap: 20,
+    gap: 40,
   },
   getStartedButton: {
     backgroundColor: '#E53E3E',
@@ -157,5 +162,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     textDecorationLine: 'underline',
+    textShadowColor: 'rgba(0, 0, 0, 0.7)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
   },
 });

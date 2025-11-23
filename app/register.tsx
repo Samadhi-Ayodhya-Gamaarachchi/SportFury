@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTheme } from '../hooks/useTheme';
 import { AppDispatch, RootState } from '../store';
@@ -70,17 +70,26 @@ export default function RegisterScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.logo}>
-          <Feather name="activity" size={32} color="#fff" />
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView 
+        style={styles.scrollContainer}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.header}>
+          <View style={styles.logo}>
+            <Feather name="activity" size={32} color="#fff" />
+          </View>
+          <Text style={styles.brandName}>SPORTIFY</Text>
+          <Text style={styles.title}>Join the Action</Text>
+          <Text style={styles.subtitle}>Create your account to get started.</Text>
         </View>
-        <Text style={styles.brandName}>SPORTIFY</Text>
-        <Text style={styles.title}>Join the Action</Text>
-        <Text style={styles.subtitle}>Create your account to get started.</Text>
-      </View>
 
-      <View style={styles.formContainer}>
+        <View style={styles.formContainer}>
         <View style={styles.inputContainer}>
           <Text style={styles.label}>First Name</Text>
           <View style={styles.inputWrapper}>
@@ -232,7 +241,8 @@ export default function RegisterScreen() {
           </TouchableOpacity>
         </View>
       </View>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -240,6 +250,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#1a1a1a',
+  },
+  scrollContainer: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 40,
   },
   header: {
     alignItems: 'center',
@@ -274,7 +291,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   formContainer: {
-    flex: 1,
     paddingHorizontal: 30,
   },
   inputContainer: {

@@ -76,7 +76,7 @@ export default function LoginScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <View style={[styles.header, { backgroundColor: theme.surface }]}>
+      <View style={[styles.header]}>
         <View style={[styles.logo, { backgroundColor: theme.primary }]}>
           <Feather name="activity" size={32} color="#fff" />
         </View>

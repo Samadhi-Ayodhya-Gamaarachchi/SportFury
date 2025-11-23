@@ -9,6 +9,7 @@ export const SPORTS_CONFIG = {
   soccer: {
     name: 'Soccer',
     icon: 'target',
+    emoji: '⚽',
     leagues: [
       { id: '4328', name: 'English Premier League', country: 'England' },
       { id: '4329', name: 'English League Championship', country: 'England' },
@@ -21,6 +22,7 @@ export const SPORTS_CONFIG = {
   basketball: {
     name: 'Basketball',
     icon: 'circle',
+    emoji: '🏀',
     leagues: [
       { id: '4387', name: 'NBA', country: 'USA' },
       { id: '4388', name: 'NCAA', country: 'USA' }
@@ -29,6 +31,7 @@ export const SPORTS_CONFIG = {
   baseball: {
     name: 'Baseball',
     icon: 'disc',
+    emoji: '⚾',
     leagues: [
       { id: '4424', name: 'MLB', country: 'USA' }
     ]
@@ -36,8 +39,42 @@ export const SPORTS_CONFIG = {
   hockey: {
     name: 'Ice Hockey',
     icon: 'navigation',
+    emoji: '🏒',
     leagues: [
       { id: '4380', name: 'NHL', country: 'USA/Canada' }
+    ]
+  },
+  americanfootball: {
+    name: 'American Football',
+    icon: 'shield',
+    emoji: '🏈',
+    leagues: [
+      { id: '4391', name: 'NFL', country: 'USA' }
+    ]
+  },
+  tennis: {
+    name: 'Tennis',
+    icon: 'circle',
+    emoji: '🎾',
+    leagues: [
+      { id: '4500', name: 'ATP Tour', country: 'International' },
+      { id: '4501', name: 'WTA Tour', country: 'International' }
+    ]
+  },
+  motorsport: {
+    name: 'Motorsport',
+    icon: 'zap',
+    emoji: '🏎️',
+    leagues: [
+      { id: '4370', name: 'Formula 1', country: 'International' }
+    ]
+  },
+  golf: {
+    name: 'Golf',
+    icon: 'target',
+    emoji: '⛳',
+    leagues: [
+      { id: '4502', name: 'PGA Tour', country: 'USA' }
     ]
   }
 };
@@ -55,39 +92,7 @@ export const authAxios = axios.create({
   timeout: 10000,
 });
 
-// Fallback data for different sports
-const getSportFallbackData = (sport: SportType) => {
-  const fallbackData: { [key in SportType]: any } = {
-    soccer: {
-      teams: [
-        { idTeam: '133604', strTeam: 'Arsenal', strTeamBadge: 'https://resources.premierleague.com/premierleague/badges/70/t3.png', strLeague: 'English Premier League', strSport: 'Soccer' },
-        { idTeam: '133602', strTeam: 'Manchester United', strTeamBadge: 'https://resources.premierleague.com/premierleague/badges/70/t1.png', strLeague: 'English Premier League', strSport: 'Soccer' },
-        { idTeam: '133599', strTeam: 'Liverpool', strTeamBadge: 'https://resources.premierleague.com/premierleague/badges/70/t14.png', strLeague: 'English Premier League', strSport: 'Soccer' }
-      ]
-    },
-    basketball: {
-      teams: [
-        { idTeam: '134865', strTeam: 'Los Angeles Lakers', strTeamBadge: 'https://via.placeholder.com/150x150/552583/FFD700?text=Lakers', strLeague: 'NBA', strSport: 'Basketball' },
-        { idTeam: '134866', strTeam: 'Boston Celtics', strTeamBadge: 'https://via.placeholder.com/150x150/007A33/ffffff?text=Celtics', strLeague: 'NBA', strSport: 'Basketball' },
-        { idTeam: '134867', strTeam: 'Golden State Warriors', strTeamBadge: 'https://via.placeholder.com/150x150/1D428A/FFC72C?text=Warriors', strLeague: 'NBA', strSport: 'Basketball' }
-      ]
-    },
-    baseball: {
-      teams: [
-        { idTeam: '135268', strTeam: 'New York Yankees', strTeamBadge: 'https://via.placeholder.com/150x150/132448/ffffff?text=Yankees', strLeague: 'MLB', strSport: 'Baseball' },
-        { idTeam: '135269', strTeam: 'Los Angeles Dodgers', strTeamBadge: 'https://via.placeholder.com/150x150/005A9C/ffffff?text=Dodgers', strLeague: 'MLB', strSport: 'Baseball' }
-      ]
-    },
-    hockey: {
-      teams: [
-        { idTeam: '134881', strTeam: 'Toronto Maple Leafs', strTeamBadge: 'https://via.placeholder.com/150x150/003E7E/ffffff?text=Leafs', strLeague: 'NHL', strSport: 'Ice Hockey' },
-        { idTeam: '134882', strTeam: 'Montreal Canadiens', strTeamBadge: 'https://via.placeholder.com/150x150/AF1E2D/ffffff?text=Canadiens', strLeague: 'NHL', strSport: 'Ice Hockey' }
-      ]
-    }
-  };
-  
-  return fallbackData[sport] || { teams: [] };
-};
+
 
 // Sports API
 export const sportsAPI = {
@@ -101,27 +106,9 @@ export const sportsAPI = {
       if (response.data && response.data.teams) {
         console.log('API teams response:', response.data.teams.length, 'teams');
         
-        // Team badge mapping for Premier League teams
-        const teamBadges: { [key: string]: string } = {
-          'Arsenal': 'https://resources.premierleague.com/premierleague/badges/70/t3.png',
-          'Manchester United': 'https://resources.premierleague.com/premierleague/badges/70/t1.png',
-          'Liverpool': 'https://resources.premierleague.com/premierleague/badges/70/t14.png',
-          'Chelsea': 'https://resources.premierleague.com/premierleague/badges/70/t8.png',
-          'Manchester City': 'https://resources.premierleague.com/premierleague/badges/70/t43.png',
-          'Tottenham Hotspur': 'https://resources.premierleague.com/premierleague/badges/70/t6.png',
-          'Brighton and Hove Albion': 'https://resources.premierleague.com/premierleague/badges/70/t36.png',
-          'Aston Villa': 'https://resources.premierleague.com/premierleague/badges/70/t7.png',
-          'Newcastle United': 'https://resources.premierleague.com/premierleague/badges/70/t4.png',
-          'West Ham United': 'https://resources.premierleague.com/premierleague/badges/70/t21.png'
-        };
-
-        // Enhance teams with better image URLs and fallbacks
+        // Use only API data without hardcoded mappings
         const enhancedTeams = response.data.teams.map((team: any) => ({
           ...team,
-          strTeamBadge: team.strTeamBadge || 
-                       teamBadges[team.strTeam] ||
-                       `https://via.placeholder.com/150x150/E53E3E/ffffff?text=${encodeURIComponent(team.strTeam)}`,
-          strTeamLogo: team.strTeamLogo || teamBadges[team.strTeam] || team.strTeamBadge,
           strDescription: team.strDescription || `${team.strTeam} is a professional football club.`
         }));
         
@@ -129,70 +116,11 @@ export const sportsAPI = {
       }
     } catch (error) {
       console.error('Error with teams API:', error);
-      console.log('Using fallback data due to API error');
+      throw new Error(`Failed to fetch teams for league: ${league}`);
     }
     
-    console.log('Using fallback data as backup');
-    
-    // Return sample data as fallback with working image URLs
-    return {
-      teams: [
-          {
-            idTeam: '133604',
-            strTeam: 'Arsenal',
-            strTeamBadge: 'https://resources.premierleague.com/premierleague/badges/70/t3.png',
-            strTeamLogo: 'https://resources.premierleague.com/premierleague/badges/70/t3.png',
-            strLeague: 'English Premier League',
-            strStadium: 'Emirates Stadium',
-            strDescription: 'Arsenal Football Club is a professional football club based in Islington, London, England.'
-          },
-          {
-            idTeam: '133602',
-            strTeam: 'Manchester United', 
-            strTeamBadge: 'https://resources.premierleague.com/premierleague/badges/70/t1.png',
-            strTeamLogo: 'https://resources.premierleague.com/premierleague/badges/70/t1.png',
-            strLeague: 'English Premier League',
-            strStadium: 'Old Trafford',
-            strDescription: 'Manchester United Football Club is a professional football club based in Old Trafford, Manchester, England.'
-          },
-          {
-            idTeam: '133599',
-            strTeam: 'Liverpool',
-            strTeamBadge: 'https://resources.premierleague.com/premierleague/badges/70/t14.png',
-            strTeamLogo: 'https://resources.premierleague.com/premierleague/badges/70/t14.png',
-            strLeague: 'English Premier League',
-            strStadium: 'Anfield',
-            strDescription: 'Liverpool Football Club is a professional football club based in Liverpool, England.'
-          },
-          {
-            idTeam: '133613',
-            strTeam: 'Chelsea',
-            strTeamBadge: 'https://resources.premierleague.com/premierleague/badges/70/t8.png',
-            strTeamLogo: 'https://resources.premierleague.com/premierleague/badges/70/t8.png',
-            strLeague: 'English Premier League',
-            strStadium: 'Stamford Bridge',
-            strDescription: 'Chelsea Football Club is a professional football club based in Fulham, London, England.'
-          },
-          {
-            idTeam: '133616',
-            strTeam: 'Manchester City',
-            strTeamBadge: 'https://resources.premierleague.com/premierleague/badges/70/t43.png',
-            strTeamLogo: 'https://resources.premierleague.com/premierleague/badges/70/t43.png',
-            strLeague: 'English Premier League',
-            strStadium: 'Etihad Stadium',
-            strDescription: 'Manchester City Football Club is a professional football club based in Manchester, England.'
-          },
-          {
-            idTeam: '133610',
-            strTeam: 'Tottenham Hotspur',
-            strTeamBadge: 'https://resources.premierleague.com/premierleague/badges/70/t6.png',
-            strTeamLogo: 'https://resources.premierleague.com/premierleague/badges/70/t6.png',
-            strLeague: 'English Premier League',
-            strStadium: 'Tottenham Hotspur Stadium',
-            strDescription: 'Tottenham Hotspur Football Club is a professional football club based in Tottenham, London, England.'
-          }
-        ]
-      };
+    // Return empty if no data found
+    return { teams: [] };
   },
 
   // Get teams by sport type
@@ -212,12 +140,9 @@ export const sportsAPI = {
       if (response.data && response.data.teams) {
         console.log(`API ${sport} teams response:`, response.data.teams.length, 'teams');
         
-        // Enhanced badge mapping for different sports
+        // Use only API data without hardcoded mappings
         const enhancedTeams = response.data.teams.map((team: any) => ({
           ...team,
-          strTeamBadge: team.strTeamBadge || 
-                       team.strTeamLogo ||
-                       `https://via.placeholder.com/150x150/E53E3E/ffffff?text=${encodeURIComponent(team.strTeam)}`,
           strSport: sport,
           strDescription: team.strDescription || `${team.strTeam} is a professional ${sport} team.`
         }));
@@ -226,10 +151,11 @@ export const sportsAPI = {
       }
     } catch (error) {
       console.error(`Error fetching ${sport} teams:`, error);
+      throw new Error(`Failed to fetch teams for sport: ${sport}`);
     }
 
-    // Return fallback data based on sport
-    return getSportFallbackData(sport);
+    // Return empty if no data found
+    return { teams: [] };
   },
 
   // Get players by team
@@ -240,55 +166,18 @@ export const sportsAPI = {
       if (response.data && response.data.player) {
         console.log('API players response:', response.data.player.length, 'players');
         
-        // Enhance players with better image URLs
-        const enhancedPlayers = response.data.player.map((player: any) => ({
-          ...player,
-          strThumb: player.strThumb || player.strCutout || 
-                   `https://www.thesportsdb.com/images/media/player/thumb/${player.idPlayer}.jpg` ||
-                   `https://via.placeholder.com/150x150/1a1a1a/ffffff?text=${encodeURIComponent(player.strPlayer)}`,
-        }));
+        // Use only API data without modifications
+        const enhancedPlayers = response.data.player;
         
         return { player: enhancedPlayers };
       }
     } catch (error) {
       console.error('Error fetching players:', error);
+      throw new Error(`Failed to fetch players for team: ${teamName}`);
     }
     
-    // Return sample players as fallback
-    return { 
-      player: [
-        {
-          idPlayer: '34145406',
-          strPlayer: 'Bukayo Saka',
-          strThumb: 'https://www.thesportsdb.com/images/media/player/thumb/34145406.jpg',
-          strPosition: 'Right Winger',
-          strTeam: teamName,
-          strNationality: 'England',
-          strHeight: '178 cm',
-          strWeight: '70 kg'
-        },
-        {
-          idPlayer: '34145407',
-          strPlayer: 'Martin Odegaard',
-          strThumb: 'https://www.thesportsdb.com/images/media/player/thumb/34145407.jpg',
-          strPosition: 'Attacking Midfielder',
-          strTeam: teamName,
-          strNationality: 'Norway',
-          strHeight: '178 cm',
-          strWeight: '68 kg'
-        },
-        {
-          idPlayer: '34145408',
-          strPlayer: 'Gabriel Martinelli',
-          strThumb: 'https://www.thesportsdb.com/images/media/player/thumb/34145408.jpg',
-          strPosition: 'Left Winger',
-          strTeam: teamName,
-          strNationality: 'Brazil',
-          strHeight: '175 cm',
-          strWeight: '72 kg'
-        }
-      ]
-    };
+    // Return empty if no data found
+    return { player: [] };
   },
 
   // Get matches by league
@@ -311,46 +200,11 @@ export const sportsAPI = {
       }
     } catch (error) {
       console.error('Error with matches API:', error);
-      console.log('Using fallback match data due to API error');
+      throw new Error(`Failed to fetch matches for league: ${league}`);
     }
     
-    console.log('Using fallback match data as backup');
-    
-    // Return sample match data immediately (API endpoints returning 404)
-    return {
-      events: [
-          {
-            idEvent: '441617',
-            strEvent: 'Arsenal vs Manchester United',
-            strHomeTeam: 'Arsenal',
-            strAwayTeam: 'Manchester United',
-            intHomeScore: '3',
-            intAwayScore: '1',
-            dateEvent: '2024-01-20',
-            strStatus: 'Match Finished'
-          },
-          {
-            idEvent: '441618',
-            strEvent: 'Liverpool vs Chelsea',
-            strHomeTeam: 'Liverpool',
-            strAwayTeam: 'Chelsea',
-            intHomeScore: '2',
-            intAwayScore: '1',
-            dateEvent: '2024-01-21',
-            strStatus: 'Match Finished'
-          },
-          {
-            idEvent: '441619',
-            strEvent: 'Manchester City vs Tottenham',
-            strHomeTeam: 'Manchester City',
-            strAwayTeam: 'Tottenham',
-            intHomeScore: '4',
-            intAwayScore: '0',
-            dateEvent: '2024-01-22',
-            strStatus: 'Match Finished'
-          }
-        ]
-      };
+    // Return empty if no data found
+    return { events: [] };
   },
 
   // Search teams
@@ -395,6 +249,7 @@ export const sportsAPI = {
       id: key,
       name: config.name,
       icon: config.icon,
+      emoji: config.emoji,
       leagues: config.leagues
     }));
   },

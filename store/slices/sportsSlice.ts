@@ -1,14 +1,16 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { sportsAPI, SportType } from '../../services/api';
+import { SPORTS_CONFIG, sportsAPI, SportType } from '../../services/api';
 
 interface Team {
   idTeam: string;
   strTeam: string;
   strTeamBadge?: string;
+  strTeamLogo?: string;
   strStadium?: string;
   strLeague?: string;
   strDescription?: string;
   strSport?: string;
+  imageUrls?: string[];
 }
 
 interface Player {
@@ -55,7 +57,13 @@ const initialState: SportsState = {
   error: null,
   selectedLeague: 'English Premier League',
   currentSport: 'soccer',
-  availableSports: sportsAPI.getAllSports(),
+  availableSports: Object.entries(SPORTS_CONFIG).map(([key, config]) => ({
+    id: key,
+    name: config.name,
+    icon: config.icon,
+    emoji: config.emoji || '',
+    leagues: config.leagues
+  })),
 };
 
 // Async thunks
@@ -128,8 +136,11 @@ const sportsSlice = createSlice({
     },
     setCurrentSport: (state, action: PayloadAction<SportType>) => {
       state.currentSport = action.payload;
-      // Reset teams when changing sport
+      // Reset all data when changing sport
       state.teams = [];
+      state.players = [];
+      state.matches = [];
+      state.error = null;
     },
     clearError: (state) => {
       state.error = null;

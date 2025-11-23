@@ -44,7 +44,7 @@ export default function DetailsScreen() {
           name: team.strTeam,
           subtitle: team.strLeague || 'Football Team',
           description: team.strStadium ? `Home Stadium: ${team.strStadium}` : 'Professional Football Team',
-          image: team.strTeamBadge || 'https://via.placeholder.com/400x300/E53E3E/ffffff?text=' + encodeURIComponent(team.strTeam),
+          image: team.strTeamBadge || team.strTeamLogo || `https://www.thesportsdb.com/images/media/team/badge/${team.idTeam}.png` || 'https://www.thesportsdb.com/images/media/team/badge/generic.png',
           type: 'team',
           additionalInfo: {
             stadium: team.strStadium,
@@ -176,7 +176,7 @@ export default function DetailsScreen() {
             style={styles.playerImage}
             imageStyle={styles.playerImageStyle}
             defaultSource={{
-              uri: 'https://via.placeholder.com/400x300/E53E3E/ffffff?text=' + encodeURIComponent(item.name)
+              uri: 'https://www.thesportsdb.com/images/media/player/thumb/generic.jpg'
             }}
           >
             <View style={styles.imageOverlay}>

@@ -4,10 +4,22 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, ImageBackground, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTheme } from '../../hooks/useTheme';
-import { SPORTS_CONFIG, SportType } from '../../services/api';
+import { SportType } from '../../services/api';
 import { AppDispatch, RootState } from '../../store';
 import { toggleFavorite } from '../../store/slices/favoritesSlice';
 import { fetchMatches, fetchPlayers, fetchTeamsBySport, setCurrentSport } from '../../store/slices/sportsSlice';
+
+// Helper function to get team image from API data only
+const getImageSource = (team: any) => {
+  // Use only API provided images
+  return team.strTeamBadge || team.strTeamLogo || team.strThumb || '';
+};
+
+// Helper function to get player image from API data only
+const getPlayerImageSource = (player: any) => {
+  // Use only API provided images
+  return player.strThumb || player.strCutout || player.strFanart1 || '';
+};
 
 export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
@@ -29,6 +41,11 @@ export default function HomeScreen() {
     }
   }, [selectedLeague]);
 
+  useEffect(() => {
+    console.log('Sport changed to:', currentSport);
+    loadData();
+  }, [currentSport]);
+
   const loadData = async () => {
     try {
       console.log('=== LOADING DATA ===');
@@ -40,12 +57,17 @@ export default function HomeScreen() {
       const teamResult = await dispatch(fetchTeamsBySport(currentSport));
       console.log('Team result for', currentSport, ':', teamResult);
       
-      // Only fetch soccer matches and players for now
+      // Fetch sport-specific data
       if (currentSport === 'soccer') {
         const matchResult = await dispatch(fetchMatches(selectedLeague || 'English Premier League'));
         console.log('Match result:', matchResult);
-        
-        const playersResult = await dispatch(fetchPlayers('Arsenal'));
+      }
+      
+      // Get players from first team if available for any sport
+      if (teamResult.payload && teamResult.payload.length > 0) {
+        const firstTeamName = teamResult.payload[0].strTeam;
+        console.log('Fetching players for team:', firstTeamName);
+        const playersResult = await dispatch(fetchPlayers(firstTeamName));
         console.log('Players result:', playersResult);
       }
       
@@ -81,39 +103,14 @@ export default function HomeScreen() {
     dispatch(setCurrentSport(sport));
   };
 
-  // Fallback data for when API is loading or fails
-  const fallbackTeams = [
-    {
-      idTeam: 'fallback1',
-      strTeam: 'Manchester United',
-      strTeamBadge: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=100&h=100&fit=crop',
-      strLeague: 'Premier League',
-      strStadium: 'Old Trafford'
-    },
-    {
-      idTeam: 'fallback2', 
-      strTeam: 'Liverpool FC',
-      strTeamBadge: 'https://images.unsplash.com/photo-1556056504-5c7696c4c28d?w=100&h=100&fit=crop',
-      strLeague: 'Premier League',
-      strStadium: 'Anfield'
-    }
-  ];
 
-  const fallbackMatches = [
-    {
-      idEvent: 'match1',
-      strEvent: 'Manchester United vs Liverpool',
-      strStatus: 'Finished',
-      intHomeScore: '2',
-      intAwayScore: '1',
-      dateEvent: '2024-03-15'
-    }
-  ];
 
-  // Use real data or fallback to placeholder data - always show something
-  const featuredTeams = teams.length > 0 ? teams.slice(0, 2) : fallbackTeams;
-  const recentMatches = matches.length > 0 ? matches.slice(0, 3) : fallbackMatches;
-  const topTeams = teams.length > 0 ? teams.slice(0, 4) : fallbackTeams.slice(0, 4);
+
+
+  // Use only real API data
+  const featuredTeams = teams.slice(0, 2);
+  const recentMatches = matches.slice(0, 3);
+  const topTeams = teams.slice(0, 4);
   
   console.log('Rendering with:', {
     teamsCount: teams.length,
@@ -159,11 +156,7 @@ export default function HomeScreen() {
               ]}
               onPress={() => handleSportChange(sport.id as SportType)}
             >
-              <Feather 
-                name={sport.icon as any} 
-                size={16} 
-                color={currentSport === sport.id ? '#fff' : theme.text} 
-              />
+              <Text style={styles.sportEmoji}>{sport.emoji}</Text>
               <Text style={[
                 styles.sportButtonText,
                 { color: currentSport === sport.id ? '#fff' : theme.text }
@@ -197,7 +190,7 @@ export default function HomeScreen() {
             <Text style={[styles.loadingText, { color: theme.textSecondary }]}>Loading sports data...</Text>
           </View>
         )}
-        {/* Always show content - either real data or fallback */}
+        {/* Show API data only */}
         {featuredTeams.map((team) => (
             <TouchableOpacity 
               key={team.idTeam} 
@@ -206,12 +199,15 @@ export default function HomeScreen() {
             >
               <ImageBackground
                 source={{ 
-                  uri: team.strTeamBadge || `https://via.placeholder.com/400x200/E53E3E/ffffff?text=${encodeURIComponent(team.strTeam || 'Team')}`
+                  uri: getImageSource(team)
                 }}
                 style={styles.featuredImage}
                 imageStyle={styles.featuredImageStyle}
-                onError={() => {
-                  console.log('Image failed to load for team:', team.strTeam);
+                defaultSource={{
+                  uri: 'https://www.thesportsdb.com/images/media/team/badge/generic.png'
+                }}
+                onError={(error) => {
+                  console.log('Image failed to load for team:', team.strTeam, error.nativeEvent?.error);
                 }}
               >
                 <View style={styles.featuredOverlay}>
@@ -300,11 +296,13 @@ export default function HomeScreen() {
               >
                 <ImageBackground
                   source={{ 
-                    uri: player.strThumb || `https://via.placeholder.com/150x150/1a1a1a/ffffff?text=${encodeURIComponent(player.strPlayer)}`
+                    uri: getPlayerImageSource(player)
                   }}
                   style={styles.playerImage}
                   imageStyle={styles.playerImageStyle}
-                  defaultSource={require('../../assets/images/react-logo.png')}
+                  defaultSource={{
+                    uri: 'https://www.thesportsdb.com/images/media/player/thumb/generic.jpg'
+                  }}
                   onError={(e) => {
                     console.log('Player image error for', player.strPlayer, ':', e.nativeEvent.error);
                   }}
@@ -348,12 +346,15 @@ export default function HomeScreen() {
               >
                 <ImageBackground
                   source={{ 
-                    uri: team.strTeamBadge || `https://via.placeholder.com/150x150/E53E3E/ffffff?text=${encodeURIComponent(team.strTeam)}`
+                    uri: getImageSource(team)
                   }}
                   style={styles.playerImage}
                   imageStyle={styles.playerImageStyle}
-                  onError={() => {
-                    console.log('Team image failed for:', team.strTeam);
+                  defaultSource={{
+                    uri: 'https://www.thesportsdb.com/images/media/team/badge/generic.png'
+                  }}
+                  onError={(error) => {
+                    console.log('Team image failed for:', team.strTeam, error.nativeEvent?.error);
                   }}
                 >
                   <View style={styles.playerOverlay}>
@@ -620,5 +621,8 @@ const styles = StyleSheet.create({
   sportButtonText: {
     fontSize: 14,
     fontWeight: '600',
+  },
+  sportEmoji: {
+    fontSize: 16,
   },
 });

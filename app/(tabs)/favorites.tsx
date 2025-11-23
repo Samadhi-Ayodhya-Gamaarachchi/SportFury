@@ -189,6 +189,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 20,
+    paddingTop:20,
   },
   favoriteItem: {
     flexDirection: 'row',
@@ -227,6 +228,7 @@ const styles = StyleSheet.create({
   },
   favoriteContent: {
     flex: 1,
+    
   },
   favoriteName: {
     fontSize: 16,

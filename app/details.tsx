@@ -2,12 +2,13 @@ import { Feather } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Dimensions, ImageBackground, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-
-const { height: screenHeight } = Dimensions.get('window');
 import { useDispatch, useSelector } from 'react-redux';
 import { useTheme } from '../hooks/useTheme';
+import { SPORTS_CONFIG } from '../services/api';
 import { AppDispatch, RootState } from '../store';
 import { addFavorite, removeFavorite } from '../store/slices/favoritesSlice';
+
+const { height: screenHeight } = Dimensions.get('window');
 
 interface DetailItem {
   id: string;
@@ -27,9 +28,36 @@ export default function DetailsScreen() {
   const dispatch = useDispatch<AppDispatch>();
   const { theme } = useTheme();
   const { items: favoriteItems } = useSelector((state: RootState) => state.favorites);
-  const { teams, matches, players } = useSelector((state: RootState) => state.sports);
+  const { teams, matches, players, currentSport } = useSelector((state: RootState) => state.sports);
 
   const isFavorite = favoriteItems.some(fav => fav.id === id);
+
+  // Function to get team type based on current sport
+  const getTeamType = () => {
+    const sportConfig = SPORTS_CONFIG[currentSport];
+    if (!sportConfig) return 'Sports Team';
+    
+    switch (currentSport) {
+      case 'soccer':
+        return 'Football Club';
+      case 'basketball':
+        return 'Basketball Team';
+      case 'baseball':
+        return 'Baseball Team';
+      case 'hockey':
+        return 'Hockey Team';
+      case 'americanfootball':
+        return 'Football Team';
+      case 'tennis':
+        return 'Tennis Player/Association';
+      case 'motorsport':
+        return 'Racing Team';
+      case 'golf':
+        return 'Golf Association';
+      default:
+        return 'Sports Team';
+    }
+  };
 
   useEffect(() => {
     loadItemDetails();
@@ -44,14 +72,14 @@ export default function DetailsScreen() {
         setItem({
           id: team.idTeam,
           name: team.strTeam,
-          subtitle: team.strLeague || 'Football Team',
-          description: team.strStadium ? `Home Stadium: ${team.strStadium}` : 'Professional Football Team',
+          subtitle: team.strLeague || `${SPORTS_CONFIG[currentSport]?.name || 'Sports'} Team`,
+          description: team.strStadium ? `Home Stadium: ${team.strStadium}` : `Professional ${SPORTS_CONFIG[currentSport]?.name || 'Sports'} Team`,
           image: team.strTeamBadge || team.strTeamLogo || `https://www.thesportsdb.com/images/media/team/badge/${team.idTeam}.png` || 'https://www.thesportsdb.com/images/media/team/badge/generic.png',
           type: 'team',
           additionalInfo: {
             stadium: team.strStadium,
             league: team.strLeague,
-            description: team.strDescription || 'A professional football team competing at the highest level.',
+            description: team.strDescription || `A professional ${SPORTS_CONFIG[currentSport]?.name?.toLowerCase() || 'sports'} team competing at the highest level.`,
           }
         });
       }
@@ -61,7 +89,7 @@ export default function DetailsScreen() {
         setItem({
           id: match.idEvent,
           name: match.strEvent,
-          subtitle: match.strStatus || 'Football Match',
+          subtitle: match.strStatus || `${SPORTS_CONFIG[currentSport]?.name || 'Sports'} Match`,
           description: `${match.strHomeTeam} vs ${match.strAwayTeam}`,
           image: 'https://images.unsplash.com/photo-1459865264687-595d652de67e?w=400&h=300&fit=crop&crop=center',
           type: 'match',
@@ -81,7 +109,7 @@ export default function DetailsScreen() {
         setItem({
           id: player.idPlayer,
           name: player.strPlayer,
-          subtitle: player.strPosition || 'Football Player',
+          subtitle: player.strPosition || `${SPORTS_CONFIG[currentSport]?.name || 'Sports'} Player`,
           description: `${player.strNationality || 'International'} player for ${player.strTeam || 'Professional Club'}`,
           image: player.strThumb || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face',
           type: 'player',
@@ -91,7 +119,7 @@ export default function DetailsScreen() {
             team: player.strTeam,
             height: player.strHeight,
             weight: player.strWeight,
-            description: `${player.strPlayer} is a professional football player known for their skills and dedication.`,
+            description: `${player.strPlayer} is a professional ${SPORTS_CONFIG[currentSport]?.name?.toLowerCase() || 'sports'} player known for their skills and dedication.`,
           }
         });
       }
@@ -254,7 +282,7 @@ export default function DetailsScreen() {
               <Text style={[styles.sectionTitle, { color: theme.text }]}>About Player</Text>
               <View style={[styles.matchCard, { backgroundColor: theme.surface }]}>
                 <Text style={[styles.descriptionText, { color: theme.text }]}>
-                  {item.additionalInfo.description || `${item.name} is a ${item.additionalInfo.position || 'professional football player'} known for exceptional skills and dedication to the sport.`}
+                  {item.additionalInfo.description || `${item.name} is a ${item.additionalInfo.position || `professional ${SPORTS_CONFIG[currentSport]?.name?.toLowerCase() || 'sports'} player`} known for exceptional skills and dedication to the sport.`}
                 </Text>
               </View>
             </View>
@@ -348,7 +376,7 @@ export default function DetailsScreen() {
                     </View>
                     <View style={[styles.statItem, { backgroundColor: theme.surface }]}>
                       <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Type</Text>
-                      <Text style={[styles.statValue, { color: theme.text }]}>Football Club</Text>
+                      <Text style={[styles.statValue, { color: theme.text }]}>{getTeamType()}</Text>
                     </View>
                     <View style={[styles.statItem, { backgroundColor: theme.surface }]}>
                       <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Status</Text>
@@ -397,7 +425,7 @@ export default function DetailsScreen() {
               <View style={[styles.matchCard, { backgroundColor: theme.surface }]}>
                 <Text style={[styles.descriptionText, { color: theme.text }]}>
                   {item.type === 'team' 
-                    ? item.additionalInfo.description || `${item.name} is a professional football team competing in ${item.additionalInfo.league || 'top-level'} football.`
+                    ? item.additionalInfo.description || `${item.name} is a professional ${SPORTS_CONFIG[currentSport]?.name?.toLowerCase() || 'sports'} team competing in ${item.additionalInfo.league || 'top-level'} ${SPORTS_CONFIG[currentSport]?.name?.toLowerCase() || 'sports'}.`
                     : `This match between ${item.additionalInfo.homeTeam} and ${item.additionalInfo.awayTeam} ${item.additionalInfo.status ? `is ${item.additionalInfo.status.toLowerCase()}` : 'was scheduled'} on ${item.additionalInfo.date || 'the specified date'}.`
                   }
                 </Text>

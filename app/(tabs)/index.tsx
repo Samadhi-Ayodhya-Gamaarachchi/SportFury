@@ -170,69 +170,7 @@ export default function HomeScreen() {
        
       </View>
 
-      {/* Featured Teams */}
-      <View style={styles.section}>
-        
-        {error && (
-          <View style={styles.errorContainer}>
-            <Text style={[styles.errorText, { color: theme.primary }]}>Error: {error}</Text>
-            <TouchableOpacity onPress={loadData} style={[styles.retryButton, { backgroundColor: theme.primary }]}>
-              <Text style={styles.retryButtonText}>Retry</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-        <Text style={[styles.debugText, { color: theme.textSecondary }]}>
-          Teams: {teams.length}, Matches: {matches.length}, Loading: {isLoading ? 'Yes' : 'No'}
-        </Text>
-        {isLoading && teams.length === 0 && (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={theme.primary} />
-            <Text style={[styles.loadingText, { color: theme.textSecondary }]}>Loading sports data...</Text>
-          </View>
-        )}
-        {/* Show API data only */}
-        {featuredTeams.map((team) => (
-            <TouchableOpacity 
-              key={team.idTeam} 
-              style={[styles.featuredCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
-              onPress={() => router.push(`/details?id=${team.idTeam}&type=team`)}
-            >
-              <ImageBackground
-                source={{ 
-                  uri: getImageSource(team)
-                }}
-                style={styles.featuredImage}
-                imageStyle={styles.featuredImageStyle}
-                defaultSource={{
-                  uri: 'https://www.thesportsdb.com/images/media/team/badge/generic.png'
-                }}
-                onError={(error) => {
-                  console.log('Image failed to load for team:', team.strTeam, error.nativeEvent?.error);
-                }}
-              >
-                <View style={styles.featuredOverlay}>
-                  <View style={styles.featuredContent}>
-                    <Text style={styles.featuredTitle}>{team.strTeam}</Text>
-                    <Text style={styles.featuredSubtitle}>{team.strLeague}</Text>
-                    <Text style={styles.featuredDescription}>
-                      {team.strStadium && `Stadium: ${team.strStadium}`}
-                    </Text>
-                  </View>
-                  <TouchableOpacity 
-                    style={styles.favoriteBtn}
-                    onPress={() => handleFavoriteToggle(team, 'team')}
-                  >
-                    <Feather 
-                      name="heart" 
-                      size={24} 
-                      color={isFavorite(team.idTeam) ? theme.primary : "#fff"} 
-                    />
-                  </TouchableOpacity>
-                </View>
-              </ImageBackground>
-            </TouchableOpacity>
-          ))}
-      </View>
+    
 
       {/* Recent Matches Section - Only for Soccer */}
       {currentSport === 'soccer' && (

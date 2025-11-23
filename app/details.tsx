@@ -1,7 +1,9 @@
 import { Feather } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, ImageBackground, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Dimensions, ImageBackground, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+const { height: screenHeight } = Dimensions.get('window');
 import { useDispatch, useSelector } from 'react-redux';
 import { useTheme } from '../hooks/useTheme';
 import { AppDispatch, RootState } from '../store';
@@ -155,149 +157,255 @@ export default function DetailsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Feather name="arrow-left" size={24} color={theme.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.text }]}>
-          {item.type === 'team' ? 'Team Details' : 'Match Details'}
-        </Text>
-        <TouchableOpacity onPress={handleShare} style={styles.shareButton}>
-          <Feather name="share" size={24} color={theme.text} />
-        </TouchableOpacity>
-      </View>
+      {item.type === 'player' ? (
+        // Player Layout: Full-width image taking half the page
+        <>
+          {/* Player Image - Half Page */}
+          <View style={styles.playerImageContainer}>
+            <ImageBackground
+              source={{ uri: item.image }}
+              style={styles.playerFullImage}
+              imageStyle={styles.playerFullImageStyle}
+              defaultSource={{
+                uri: 'https://www.thesportsdb.com/images/media/player/thumb/generic.jpg'
+              }}
+            >
+              {/* Header overlay for player */}
+              <View style={styles.playerHeaderOverlay}>
+                <TouchableOpacity onPress={() => router.back()} style={styles.overlayBackButton}>
+                  <Feather name="arrow-left" size={24} color="#fff" />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={handleShare} style={styles.overlayShareButton}>
+                  <Feather name="share" size={24} color="#fff" />
+                </TouchableOpacity>
+              </View>
+              
+              {/* Favorite button overlay */}
+              <View style={styles.playerImageOverlay}>
+                <TouchableOpacity 
+                  style={[styles.favoriteButton, { backgroundColor: 'rgba(0,0,0,0.6)' }]}
+                  onPress={handleFavoriteToggle}
+                >
+                  <Feather 
+                    name="heart" 
+                    size={24} 
+                    color={isFavorite ? theme.primary : "#fff"} 
+                  />
+                </TouchableOpacity>
+              </View>
+            </ImageBackground>
+          </View>
+          
+          {/* Player Details - Scrollable */}
+          <ScrollView style={[styles.playerDetailsContainer, { backgroundColor: theme.background }]} showsVerticalScrollIndicator={false}>
+            {/* Player Info */}
+            <View style={styles.playerInfo}>
+              <Text style={[styles.playerName, { color: theme.text }]}>{item.name}</Text>
+              <Text style={[styles.playerPosition, { color: theme.primary }]}>{item.subtitle}</Text>
+              <Text style={[styles.playerCategory, { color: theme.textSecondary }]}>{item.description}</Text>
+            </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Item Image */}
-        <View style={styles.imageContainer}>
-          <ImageBackground
-            source={{ uri: item.image }}
-            style={styles.playerImage}
-            imageStyle={styles.playerImageStyle}
-            defaultSource={{
-              uri: 'https://www.thesportsdb.com/images/media/player/thumb/generic.jpg'
-            }}
-          >
-            <View style={styles.imageOverlay}>
-              <TouchableOpacity 
-                style={[styles.favoriteButton, { backgroundColor: 'rgba(0,0,0,0.6)' }]}
-                onPress={handleFavoriteToggle}
-              >
-                <Feather 
-                  name="heart" 
-                  size={24} 
-                  color={isFavorite ? theme.primary : "#fff"} 
-                />
+            {/* Action Buttons */}
+            <View style={styles.actionButtons}>
+              <TouchableOpacity style={[styles.primaryButton, { backgroundColor: theme.primary }]}>
+                <Text style={styles.primaryButtonText}>Player Stats</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.secondaryButton, { backgroundColor: theme.surface }]}>
+                <Text style={[styles.secondaryButtonText, { color: theme.textSecondary }]}>Career</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.secondaryButton, { backgroundColor: theme.surface }]}>
+                <Text style={[styles.secondaryButtonText, { color: theme.textSecondary }]}>News</Text>
               </TouchableOpacity>
             </View>
-          </ImageBackground>
-        </View>
 
-        {/* Item Info */}
-        <View style={styles.playerInfo}>
-          <Text style={[styles.playerName, { color: theme.text }]}>{item.name}</Text>
-          <Text style={[styles.playerPosition, { color: theme.primary }]}>{item.subtitle}</Text>
-          <Text style={[styles.playerCategory, { color: theme.textSecondary }]}>{item.description}</Text>
-        </View>
+            {/* Player Stats Section */}
+            <View style={styles.statsSection}>
+              <Text style={[styles.sectionTitle, { color: theme.text }]}>Player Stats</Text>
+              <View style={styles.statsGrid}>
+                <View style={[styles.statItem, { backgroundColor: theme.surface }]}>
+                  <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Position</Text>
+                  <Text style={[styles.statValue, { color: theme.text }]}>
+                    {item.additionalInfo.position || 'Player'}
+                  </Text>
+                </View>
+                <View style={[styles.statItem, { backgroundColor: theme.surface }]}>
+                  <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Nationality</Text>
+                  <Text style={[styles.statValue, { color: theme.text }]}>
+                    {item.additionalInfo.nationality || 'International'}
+                  </Text>
+                </View>
+                <View style={[styles.statItem, { backgroundColor: theme.surface }]}>
+                  <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Team</Text>
+                  <Text style={[styles.statValue, { color: theme.text }]}>
+                    {item.additionalInfo.team || 'Professional'}
+                  </Text>
+                </View>
+                <View style={[styles.statItem, { backgroundColor: theme.surface }]}>
+                  <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Height</Text>
+                  <Text style={[styles.statValue, { color: theme.text }]}>
+                    {item.additionalInfo.height || 'N/A'}
+                  </Text>
+                </View>
+              </View>
+            </View>
 
-        {/* Action Buttons */}
-        <View style={styles.actionButtons}>
-          <TouchableOpacity style={[styles.primaryButton, { backgroundColor: theme.primary }]}>
-            <Text style={styles.primaryButtonText}>
-              {item.type === 'team' ? 'Team Info' : 'Match Info'}
+            {/* Description Section */}
+            <View style={styles.upcomingSection}>
+              <Text style={[styles.sectionTitle, { color: theme.text }]}>About Player</Text>
+              <View style={[styles.matchCard, { backgroundColor: theme.surface }]}>
+                <Text style={[styles.descriptionText, { color: theme.text }]}>
+                  {item.additionalInfo.description || `${item.name} is a ${item.additionalInfo.position || 'professional football player'} known for exceptional skills and dedication to the sport.`}
+                </Text>
+              </View>
+            </View>
+          </ScrollView>
+        </>
+      ) : (
+        // Traditional Layout for Teams and Matches
+        <>
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+              <Feather name="arrow-left" size={24} color={theme.text} />
+            </TouchableOpacity>
+            <Text style={[styles.headerTitle, { color: theme.text }]}>
+              {item.type === 'team' ? 'Team Details' : 'Match Details'}
             </Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.secondaryButton, { backgroundColor: theme.surface }]}>
-            <Text style={[styles.secondaryButtonText, { color: theme.textSecondary }]}>
-              {item.type === 'team' ? 'Players' : 'Statistics'}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.secondaryButton, { backgroundColor: theme.surface }]}>
-            <Text style={[styles.secondaryButtonText, { color: theme.textSecondary }]}>News</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Dynamic Content Section */}
-        <View style={styles.statsSection}>
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>
-            {item.type === 'team' ? 'Team Details' : item.type === 'player' ? 'Player Details' : 'Match Details'}
-          </Text>
-          <View style={styles.statsGrid}>
-            {item.type === 'team' ? (
-              <>
-                <View style={[styles.statItem, { backgroundColor: theme.surface }]}>
-                  <Text style={[styles.statLabel, { color: theme.textSecondary }]}>League</Text>
-                  <Text style={[styles.statValue, { color: theme.text }]}>
-                    {item.additionalInfo.league || 'N/A'}
-                  </Text>
-                </View>
-                <View style={[styles.statItem, { backgroundColor: theme.surface }]}>
-                  <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Stadium</Text>
-                  <Text style={[styles.statValue, { color: theme.text }]}>
-                    {item.additionalInfo.stadium || 'N/A'}
-                  </Text>
-                </View>
-                <View style={[styles.statItem, { backgroundColor: theme.surface }]}>
-                  <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Type</Text>
-                  <Text style={[styles.statValue, { color: theme.text }]}>Football Club</Text>
-                </View>
-                <View style={[styles.statItem, { backgroundColor: theme.surface }]}>
-                  <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Status</Text>
-                  <Text style={[styles.statValue, { color: theme.text }]}>Active</Text>
-                </View>
-              </>
-            ) : (
-              <>
-                <View style={[styles.statItem, { backgroundColor: theme.surface }]}>
-                  <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Home Team</Text>
-                  <Text style={[styles.statValue, { color: theme.text }]}>
-                    {item.additionalInfo.homeTeam || 'N/A'}
-                  </Text>
-                </View>
-                <View style={[styles.statItem, { backgroundColor: theme.surface }]}>
-                  <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Away Team</Text>
-                  <Text style={[styles.statValue, { color: theme.text }]}>
-                    {item.additionalInfo.awayTeam || 'N/A'}
-                  </Text>
-                </View>
-                <View style={[styles.statItem, { backgroundColor: theme.surface }]}>
-                  <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Score</Text>
-                  <Text style={[styles.statValue, { color: theme.text }]}>
-                    {item.additionalInfo.homeScore && item.additionalInfo.awayScore 
-                      ? `${item.additionalInfo.homeScore} - ${item.additionalInfo.awayScore}`
-                      : 'TBD'
-                    }
-                  </Text>
-                </View>
-                <View style={[styles.statItem, { backgroundColor: theme.surface }]}>
-                  <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Date</Text>
-                  <Text style={[styles.statValue, { color: theme.text }]}>
-                    {item.additionalInfo.date || 'N/A'}
-                  </Text>
-                </View>
-              </>
-            )}
+            <TouchableOpacity onPress={handleShare} style={styles.shareButton}>
+              <Feather name="share" size={24} color={theme.text} />
+            </TouchableOpacity>
           </View>
-        </View>
 
-        {/* Description Section */}
-        <View style={styles.upcomingSection}>
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>
-            {item.type === 'team' ? 'About Team' : item.type === 'player' ? 'About Player' : 'Match Details'}
-          </Text>
-          <View style={[styles.matchCard, { backgroundColor: theme.surface }]}>
-            <Text style={[styles.descriptionText, { color: theme.text }]}>
-              {item.type === 'team' 
-                ? item.additionalInfo.description || `${item.name} is a professional football team competing in ${item.additionalInfo.league || 'top-level'} football.`
-                : item.type === 'player'
-                ? item.additionalInfo.description || `${item.name} is a ${item.additionalInfo.position || 'professional football player'} known for exceptional skills and dedication to the sport.`
-                : `This match between ${item.additionalInfo.homeTeam} and ${item.additionalInfo.awayTeam} ${item.additionalInfo.status ? `is ${item.additionalInfo.status.toLowerCase()}` : 'was scheduled'} on ${item.additionalInfo.date || 'the specified date'}.`
-              }
-            </Text>
-          </View>
-        </View>
-      </ScrollView>
+          <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+            {/* Item Image */}
+            <View style={styles.imageContainer}>
+              <ImageBackground
+                source={{ uri: item.image }}
+                style={styles.playerImage}
+                imageStyle={styles.playerImageStyle}
+                defaultSource={{
+                  uri: 'https://www.thesportsdb.com/images/media/player/thumb/generic.jpg'
+                }}
+              >
+                <View style={styles.imageOverlay}>
+                  <TouchableOpacity 
+                    style={[styles.favoriteButton, { backgroundColor: 'rgba(0,0,0,0.6)' }]}
+                    onPress={handleFavoriteToggle}
+                  >
+                    <Feather 
+                      name="heart" 
+                      size={24} 
+                      color={isFavorite ? theme.primary : "#fff"} 
+                    />
+                  </TouchableOpacity>
+                </View>
+              </ImageBackground>
+            </View>
+
+            {/* Item Info */}
+            <View style={styles.playerInfo}>
+              <Text style={[styles.playerName, { color: theme.text }]}>{item.name}</Text>
+              <Text style={[styles.playerPosition, { color: theme.primary }]}>{item.subtitle}</Text>
+              <Text style={[styles.playerCategory, { color: theme.textSecondary }]}>{item.description}</Text>
+            </View>
+
+            {/* Action Buttons */}
+            <View style={styles.actionButtons}>
+              <TouchableOpacity style={[styles.primaryButton, { backgroundColor: theme.primary }]}>
+                <Text style={styles.primaryButtonText}>
+                  {item.type === 'team' ? 'Team Info' : 'Match Info'}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.secondaryButton, { backgroundColor: theme.surface }]}>
+                <Text style={[styles.secondaryButtonText, { color: theme.textSecondary }]}>
+                  {item.type === 'team' ? 'Players' : 'Statistics'}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.secondaryButton, { backgroundColor: theme.surface }]}>
+                <Text style={[styles.secondaryButtonText, { color: theme.textSecondary }]}>News</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Dynamic Content Section */}
+            <View style={styles.statsSection}>
+              <Text style={[styles.sectionTitle, { color: theme.text }]}>
+                {item.type === 'team' ? 'Team Details' : 'Match Details'}
+              </Text>
+              <View style={styles.statsGrid}>
+                {item.type === 'team' ? (
+                  <>
+                    <View style={[styles.statItem, { backgroundColor: theme.surface }]}>
+                      <Text style={[styles.statLabel, { color: theme.textSecondary }]}>League</Text>
+                      <Text style={[styles.statValue, { color: theme.text }]}>
+                        {item.additionalInfo.league || 'N/A'}
+                      </Text>
+                    </View>
+                    <View style={[styles.statItem, { backgroundColor: theme.surface }]}>
+                      <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Stadium</Text>
+                      <Text style={[styles.statValue, { color: theme.text }]}>
+                        {item.additionalInfo.stadium || 'N/A'}
+                      </Text>
+                    </View>
+                    <View style={[styles.statItem, { backgroundColor: theme.surface }]}>
+                      <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Type</Text>
+                      <Text style={[styles.statValue, { color: theme.text }]}>Football Club</Text>
+                    </View>
+                    <View style={[styles.statItem, { backgroundColor: theme.surface }]}>
+                      <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Status</Text>
+                      <Text style={[styles.statValue, { color: theme.text }]}>Active</Text>
+                    </View>
+                  </>
+                ) : (
+                  <>
+                    <View style={[styles.statItem, { backgroundColor: theme.surface }]}>
+                      <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Home Team</Text>
+                      <Text style={[styles.statValue, { color: theme.text }]}>
+                        {item.additionalInfo.homeTeam || 'N/A'}
+                      </Text>
+                    </View>
+                    <View style={[styles.statItem, { backgroundColor: theme.surface }]}>
+                      <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Away Team</Text>
+                      <Text style={[styles.statValue, { color: theme.text }]}>
+                        {item.additionalInfo.awayTeam || 'N/A'}
+                      </Text>
+                    </View>
+                    <View style={[styles.statItem, { backgroundColor: theme.surface }]}>
+                      <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Score</Text>
+                      <Text style={[styles.statValue, { color: theme.text }]}>
+                        {item.additionalInfo.homeScore && item.additionalInfo.awayScore 
+                          ? `${item.additionalInfo.homeScore} - ${item.additionalInfo.awayScore}`
+                          : 'TBD'
+                        }
+                      </Text>
+                    </View>
+                    <View style={[styles.statItem, { backgroundColor: theme.surface }]}>
+                      <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Date</Text>
+                      <Text style={[styles.statValue, { color: theme.text }]}>
+                        {item.additionalInfo.date || 'N/A'}
+                      </Text>
+                    </View>
+                  </>
+                )}
+              </View>
+            </View>
+
+            {/* Description Section */}
+            <View style={styles.upcomingSection}>
+              <Text style={[styles.sectionTitle, { color: theme.text }]}>
+                {item.type === 'team' ? 'About Team' : 'Match Details'}
+              </Text>
+              <View style={[styles.matchCard, { backgroundColor: theme.surface }]}>
+                <Text style={[styles.descriptionText, { color: theme.text }]}>
+                  {item.type === 'team' 
+                    ? item.additionalInfo.description || `${item.name} is a professional football team competing in ${item.additionalInfo.league || 'top-level'} football.`
+                    : `This match between ${item.additionalInfo.homeTeam} and ${item.additionalInfo.awayTeam} ${item.additionalInfo.status ? `is ${item.additionalInfo.status.toLowerCase()}` : 'was scheduled'} on ${item.additionalInfo.date || 'the specified date'}.`
+                  }
+                </Text>
+              </View>
+            </View>
+          </ScrollView>
+        </>
+      )}
     </View>
   );
 }
@@ -494,5 +602,46 @@ const styles = StyleSheet.create({
   matchTime: {
     fontSize: 12,
     color: '#666',
+  },
+  
+  // Player-specific styles
+  playerImageContainer: {
+    height: screenHeight * 0.5, // Half of screen height
+    width: '100%',
+  },
+  playerFullImage: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  playerFullImageStyle: {
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+  },
+  playerHeaderOverlay: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 50,
+    paddingHorizontal: 20,
+  },
+  overlayBackButton: {
+    padding: 8,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 20,
+  },
+  overlayShareButton: {
+    padding: 8,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 20,
+  },
+  playerImageOverlay: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+  },
+  playerDetailsContainer: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
 });
